@@ -75,13 +75,28 @@ export class AppServiceNode extends NodeBase {
         let iconName = this.site.kind.startsWith('functionapp') ? 'AzureFunctionsApp_16x_vscode.svg' : 'AzureWebsite_16x_vscode.svg';
         return {
             label: `${this.label} (${this.site.resourceGroup})`,
-            collapsibleState: TreeItemCollapsibleState.None,
+            collapsibleState: TreeItemCollapsibleState.Collapsed,
             contextValue: 'appService',
             iconPath: { 
                 light: path.join(__filename, '..', '..', '..', 'resources', 'light', iconName),
                 dark: path.join(__filename, '..', '..', '..', 'resources', 'dark', iconName)
             }
         }
+    }
+
+    async getChildren(azureAccount: AzureAccountWrapper): Promise<NodeBase[]> {
+        if (azureAccount.signInStatus !== 'LoggedIn') {
+            return [];
+        }
+        var nodes: Array<NodeBase> = [];
+        
+        const credential = azureAccount.getCredentialByTenantId(this.subscription.tenantId);
+        const client = new WebSiteManagementClient(credential, this.subscription.subscriptionId);
+        const webApp = await client.webApps.get(this.site.resourceGroup, this.site.name);
+    
+
+        console.log(webApp.siteConfig);
+        return nodes;
     }
 
     browse(): void {
